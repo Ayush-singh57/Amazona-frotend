@@ -24,6 +24,7 @@ jobs:
         # This injects your ALB link directly into the build!
         env:
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+          CI: false
         run: npm run build
 
       - name: Configure AWS Credentials
