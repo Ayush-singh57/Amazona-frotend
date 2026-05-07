@@ -3,8 +3,7 @@ name: Deploy React Frontend to AWS
 on:
   push:
     branches:
-      - main  # or master, depending on your default branch
-
+      - main 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -15,13 +14,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # Adjust if you use a different Node version
+          node-version: '18' 
 
       - name: Install Dependencies
         run: npm install
 
       - name: Build React App
-        # This injects your ALB link directly into the build!
+        # This injects ALB link directly into the build
         env:
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
           CI: false
@@ -35,9 +34,8 @@ jobs:
           aws-region: ap-south-1
 
       - name: Deploy to S3 Bucket
-        # Syncs the build folder and deletes old files not in the new build
         run: aws s3 sync build/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
 
       - name: Invalidate CloudFront Cache
-        # Forces the CDN to fetch your new files instead of serving old cached ones
+        # Forces the CDN to fetch new files instead of serving old cached ones
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} --paths "/*"
