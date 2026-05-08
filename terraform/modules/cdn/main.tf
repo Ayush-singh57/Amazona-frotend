@@ -1,10 +1,10 @@
-# 1. The S3 Bucket (Private & Secure)
+# 1. The S3 Bucket 
 resource "aws_s3_bucket" "frontend" {
   bucket        = "${var.project_name}-frontend-bucket"
   force_destroy = true
 }
 
-# Ensure the bucket is totally private
+# Ensure the bucket is private
 resource "aws_s3_bucket_ownership_controls" "frontend" {
   bucket = aws_s3_bucket.frontend.id
   rule { 
@@ -12,7 +12,7 @@ resource "aws_s3_bucket_ownership_controls" "frontend" {
   }
 }
 
-# 2. CloudFront Origin Access Control (OAC)
+# 2.  (OAC)
 resource "aws_cloudfront_origin_access_control" "default" {
   name                              = "${var.project_name}-oac"
   description                       = "OAC for frontend"
@@ -25,7 +25,7 @@ resource "aws_cloudfront_origin_access_control" "default" {
 resource "aws_cloudfront_distribution" "cdn" {
   enabled             = true
   default_root_object = "index.html"
-  price_class         = "PriceClass_100" # Uses cheapest regions to save money
+  price_class         = "PriceClass_100" 
 
   origin {
     domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
@@ -45,7 +45,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
-  # THE REACT SPA MAGIC TRICK: Route all 404s/403s back to index.html so React Router works
+  # Route all 404s/403s back to index.html so React Router works
   custom_error_response {
     error_code         = 403
     response_code      = 200
