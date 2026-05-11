@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main 
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -20,9 +21,9 @@ jobs:
         run: npm install
 
       - name: Build React App
-        # This injects ALB link directly into the build
+        # REMOVED: REACT_APP_API_URL injection. 
+        # CloudFront now handles API routing automatically via relative paths (/api/products).
         env:
-          REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
           CI: false
         run: npm run build
 
