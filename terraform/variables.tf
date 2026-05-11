@@ -1,8 +1,11 @@
 variable "aws_region" {
-  default = "ap-south-1"
+  description = "The AWS region to deploy the infrastructure in"
+  type        = string
+  default     = "ap-south-1" # Mumbai!
 }
 
-#  "-ui" for unique name
-variable "project_name" {
-  default = "amazona-prod-ui" 
+variable "app_name" {
+  description = "Name of the frontend application"
+  type        = string
+  default     = "react-frontend"
 }

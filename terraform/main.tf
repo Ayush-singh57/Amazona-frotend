@@ -11,8 +11,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Call your new CDN module
 module "frontend_cdn" {
-  source       = "./modules/cdn"
-  project_name = var.project_name
+  source   = "./modules/frontend_cdn"
+  app_name = var.app_name
 }
