@@ -1,4 +1,4 @@
-# 1. The S3 Bucket 
+# 1 The S3 Bucket 
 resource "aws_s3_bucket" "frontend" {
   bucket        = "${var.project_name}-frontend-bucket"
   force_destroy = true
