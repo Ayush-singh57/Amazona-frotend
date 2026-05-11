@@ -36,7 +36,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   # ORIGIN 2: Node.js Backend (ALB)
   origin {
-    domain_name = "amazona-prod-alb-391879991.ap-south-1.elb.amazonaws.com"
+    domain_name = "amazona-production-alb-2023469517.ap-south-1.elb.amazonaws.com"
     origin_id   = "ALB-Origin"
 
     custom_origin_config {
