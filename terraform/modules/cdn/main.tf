@@ -1,4 +1,4 @@
-# 1 The S3 Bucket 
+# 1 S3 Bucket 
 resource "aws_s3_bucket" "frontend" {
   bucket        = "${var.project_name}-frontend-bucket"
   force_destroy = true
@@ -12,7 +12,7 @@ resource "aws_s3_bucket_ownership_controls" "frontend" {
   }
 }
 
-# 2.  (OAC)
+# 2. origin access control
 resource "aws_cloudfront_origin_access_control" "default" {
   name                              = "${var.project_name}-oac"
   description                       = "OAC for frontend"
