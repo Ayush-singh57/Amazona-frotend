@@ -36,6 +36,7 @@ import UserEditScreen from './screens/UserEditScreen';
 import MapScreen from './screens/MapScreen';
 import ForgetPasswordScreen from './screens/ForgetPasswordScreen';
 import ResetPasswordScreen from './screens/ResetPasswordScreen';
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || '';
 
 function App() {
   const { state, dispatch: ctxDispatch } = useContext(Store);
