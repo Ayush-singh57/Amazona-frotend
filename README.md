@@ -1,70 +1,164 @@
-# Getting Started with Create React App
+<div align="center">
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# ⚛️ Amazona — React Frontend
 
-## Available Scripts
+**A high-performance, globally distributed React application**
+**delivered via Amazon CloudFront with full Infrastructure as Code and automated CI/CD.**
 
-In the project directory, you can run:
+[![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)
+[![AWS CloudFront](https://img.shields.io/badge/CloudFront-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/cloudfront)
+[![Amazon S3](https://img.shields.io/badge/Amazon_S3-569A31?style=for-the-badge&logo=amazon-s3&logoColor=white)](https://aws.amazon.com/s3)
+[![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)](https://terraform.io)
+[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/features/actions)
 
-### `npm start`
+</div>
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 📋 Table of Contents
 
-### `npm test`
+- [Architecture Overview](#-architecture-overview)
+- [Infrastructure as Code](#️-infrastructure-as-code-terraform)
+- [CI/CD Pipeline](#-continuous-delivery-github-actions)
+- [Repository Structure](#-repository-structure)
+- [Local Development](#-local-development)
+- [Backend Integration](#-backend-integration)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 🏗 Architecture Overview
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+Browser (Anywhere)
+        │
+        ▼
+┌───────────────────────────────────┐
+│        Amazon CloudFront          │  ← Global Edge Network
+│   (CDN · HTTPS · SPA Routing)     │    millisecond load times worldwide
+└──────────────┬────────────────────┘
+               │  Origin Access Control (OAC)
+               │  Private — no direct public access
+               ▼
+┌──────────────────────────────────┐
+│         Amazon S3 Bucket         │  ← Static React Build Assets
+│    (Private Origin · Versioned)  │
+└──────────────────────────────────┘
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+The React app is built once and deployed to a **private S3 bucket** — never exposed directly to the internet. **CloudFront** acts as the sole entry point, serving assets from edge locations worldwide. A **CloudFront Invalidation** on every deploy ensures users always receive the latest build instantly.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## ☁️ Infrastructure as Code (Terraform)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+The entire AWS delivery layer is defined as code. One command provisions the full global infrastructure from scratch — no manual console clicks.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### What Gets Provisioned
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+> 🔹 **Amazon CloudFront** — Global CDN caching assets at edge locations for millisecond-level load times
+>
+> 🔹 **Amazon S3** — Private origin bucket storing all static React build assets
+>
+> 🔹 **Origin Access Control (OAC)** — Enforces that S3 is only reachable through CloudFront, never directly
+>
+> 🔹 **SPA Routing** — Custom 404 → `index.html` redirect so React Router handles all browser navigation
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Provision the Infrastructure
 
-## Learn More
+```bash
+terraform init && terraform apply -auto-approve
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🔄 Continuous Delivery (GitHub Actions)
 
-### Code Splitting
+Every push to `main` triggers a fully automated deployment that takes the React source code all the way to the global CDN.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```
+git push → GitHub Actions
+               │
+               ├── 1️⃣  Inject ALB API URL into the React build environment
+               ├── 2️⃣  Generate optimised production bundle  (npm run build)
+               ├── 3️⃣  Authenticate with AWS (OIDC — no stored credentials)
+               ├── 4️⃣  Sync  build/  →  private S3 origin bucket
+               └── 5️⃣  Invalidate CloudFront cache → ✅ Users see latest version instantly
+```
 
-### Analyzing the Bundle Size
+> **Environment Injection** — The backend ALB URL is injected at build time as `REACT_APP_API_URL`, so the same codebase targets local, staging, or production without any code changes.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## 📂 Repository Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```
+amazona-frontend/
+│
+├── 📁 .github/workflows/       # CI/CD: Automated S3 sync & CDN invalidation
+│
+├── 📁 terraform/               # IaC: S3, CloudFront & OAC definitions
+│   ├── cloudfront.tf           #   → Distribution, cache behaviours, SPA routing
+│   ├── s3.tf                   #   → Private origin bucket
+│   └── oac.tf                  #   → Origin Access Control policy
+│
+├── 📁 public/                  # Static public assets
+│
+├── 📁 src/                     # React components & state logic
+│   ├── components/             #   → Shared UI components
+│   ├── screens/                #   → Page-level screen components
+│   └── App.js                  #   → Root component & routing
+│
+├── 🔐 .env.example             # Required environment variable templates
+└── 📦 package.json             # React project manifest & scripts
+```
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 💻 Local Development
 
-### Deployment
+The app can be run locally for UI/UX testing and development against any backend target.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### 1 · Install Dependencies
 
-### `npm run build` fails to minify
+```bash
+npm install
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### 2 · Configure Environment Variables
+
+```env
+# .env
+REACT_APP_API_URL=http://localhost:4000   # or your staging ALB URL
+```
+
+> ⚠️ **Never commit your `.env` file.** Use `.env.example` to document required variables.
+
+### 3 · Start the Dev Server
+
+```bash
+npm start
+```
+
+The app will open at **`http://localhost:3000`** with hot-reloading enabled.
+
+---
+
+## 🔗 Backend Integration
+
+The frontend is fully decoupled from the backend. All API communication flows through the backend's **Application Load Balancer**, configured dynamically via the `REACT_APP_API_URL` environment variable.
+
+| Environment | `REACT_APP_API_URL` |
+|---|---|
+| **Local** | `http://localhost:4000` |
+| **Staging** | `http://<staging-alb-url>` |
+| **Production** | `http://<production-alb-url>` *(injected by CI/CD)* |
+
+No code changes are needed to switch targets — only the environment variable changes.
+
+---
+
+<div align="center">
+
+ Delivered  by Amazon CloudFront
+
+</div>
