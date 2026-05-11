@@ -1,4 +1,4 @@
-# 1. Random string to ensure S3 bucket name is globally unique
+# 1.  S3 bucket name is globally unique
 resource "random_string" "suffix" {
   length  = 6
   special = false
