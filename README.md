@@ -160,5 +160,4 @@ No code changes are needed to switch targets — only the environment variable c
 <div align="center">
 
  Delivered  by Amazon CloudFront
-
 </div>
