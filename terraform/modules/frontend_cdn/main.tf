@@ -34,11 +34,11 @@ resource "aws_cloudfront_distribution" "cdn" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
 
+  # ONLY ONE ORIGIN: The S3 Bucket
   origin {
     domain_name              = aws_s3_bucket.frontend_bucket.bucket_regional_domain_name
     origin_id                = "S3-${aws_s3_bucket.frontend_bucket.bucket}"
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
-    
   }
 
   default_cache_behavior {
