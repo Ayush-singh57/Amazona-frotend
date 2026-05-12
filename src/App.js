@@ -36,7 +36,8 @@ import UserEditScreen from './screens/UserEditScreen';
 import MapScreen from './screens/MapScreen';
 import ForgetPasswordScreen from './screens/ForgetPasswordScreen';
 import ResetPasswordScreen from './screens/ResetPasswordScreen';
-axios.defaults.baseURL = process.env.REACT_APP_API_URL || '';
+// Automatically use the secure CloudFront Proxy in production, and localhost for local development!
+axios.defaults.baseURL = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:4000/api';
 
 function App() {
   const { state, dispatch: ctxDispatch } = useContext(Store);

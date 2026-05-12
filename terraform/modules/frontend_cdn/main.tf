@@ -34,13 +34,49 @@ resource "aws_cloudfront_distribution" "cdn" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
 
-  # ONLY ONE ORIGIN: The S3 Bucket
+  # ORIGIN 1: The S3 Bucket (React UI)
   origin {
     domain_name              = aws_s3_bucket.frontend_bucket.bucket_regional_domain_name
     origin_id                = "S3-${aws_s3_bucket.frontend_bucket.bucket}"
     origin_access_control_id = aws_cloudfront_origin_access_control.oac.id
   }
 
+  # ORIGIN 2: The Application Load Balancer (Node API)
+  origin {
+    domain_name = "nodejs-backend-alb-1994280046.ap-south-1.elb.amazonaws.com"
+    origin_id   = "AlbBackend"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only" 
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  # CUSTOM API ROUTING: Send anything with /api/* to the ALB securely
+  ordered_cache_behavior {
+    path_pattern     = "/api/*"
+    target_origin_id = "AlbBackend"
+
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+
+    forwarded_values {
+      query_string = true
+      headers      = ["*"] 
+      cookies {
+        forward = "all"
+      }
+    }
+    
+    viewer_protocol_policy = "https-only"
+    min_ttl                = 0
+    default_ttl            = 0 
+    max_ttl                = 0
+  }
+
+  # DEFAULT ROUTING: Send everything else to S3
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
